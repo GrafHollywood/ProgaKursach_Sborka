@@ -603,7 +603,7 @@ void CProgaKursachDlg::CreateKreplenie()
 	
 	RevolveFeatures* ftRevolve;
 	ft->get_RevolveFeatures(&ftRevolve);
-	RevolveFeaturePtr revolve1 = ftRevolve->MethodAddFull(pProfile, wax->GetItem(1), kJoinOperation);
+	RevolveFeaturePtr revolve1 = ftRevolve->MethodAddFull(pProfile, lines[0], kJoinOperation);
 
 	//создание фасок
 	EdgeCollection* edgeColl;

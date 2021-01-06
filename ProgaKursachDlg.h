@@ -49,4 +49,5 @@ public:
 	afx_msg void OnBnClickedButton1();
 	void CreateVal();
 	void CreateKreplenie();
+	void CreateSborka();
 };

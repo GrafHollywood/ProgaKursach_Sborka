@@ -332,9 +332,12 @@ void CProgaKursachDlg::OnBnClickedButtonCreate()
 		}
 	}
 	pInvApp->put_Visible(TRUE);
+
 	CreateMufta();
 	CreateVal();
 	CreateKreplenie();
+
+	CreateSborka();
 }
 
 
@@ -629,6 +632,89 @@ void CProgaKursachDlg::CreateKreplenie()
 	pTrans->MethodEnd();
 	pPartDoc->MethodSaveAs(PATH_KREPLENIE, true); //сохранение детали
 }
+
+void CProgaKursachDlg::CreateSborka()
+{
+	// TODO: Добавьте сюда код реализации.
+	pAsmDoc = pInvApp->Documents->MethodAdd(kAssemblyDocumentObject, pInvApp->FileManager->MethodGetTemplateFile(kAssemblyDocumentObject, kMetricSystemOfMeasure, kGOST_DraftingStandard), true);
+	pAsmDoc->DisplayName = _T("Муфта глухая втулочная исп1");
+	pAsmDoc->get_ComponentDefinition(&pAsmComDef);
+	pInvApp->get_TransientGeometry(&pTransGeomAsm);
+	pTransGeomAsm->raw_CreateMatrix(&oPositionMatrix);
+	pPartComDef->get_WorkAxes(&wax);
+	pPartComDef->get_WorkPoints(&wpt);
+
+	ComponentOccurrencePtr modelMufta, modelVal1, modelVal2, modelKreplenie1, modelKreplenie2;
+	modelMufta = pAsmDoc->ComponentDefinition->Occurrences->MethodAdd(PATH_MUFTA, oPositionMatrix);
+	modelVal1 = pAsmDoc->ComponentDefinition->Occurrences->MethodAdd(PATH_VAL, oPositionMatrix);
+	oPositionMatrix->MethodSetToRotateTo(pTransGeomAsm->MethodCreateVector(0, 1, 0), pTransGeomAsm->MethodCreateVector(0, -1, 0), pTransGeomAsm->MethodCreateVector(0, 0, 1)); //поворот для второго вала
+	oPositionMatrix->MethodSetToRotateTo(pTransGeomAsm->MethodCreateVector(0, 0, 1), pTransGeomAsm->MethodCreateVector(0, 0, -1), pTransGeomAsm->MethodCreateVector(0, 1, 0));
+	modelVal2 = pAsmDoc->ComponentDefinition->Occurrences->MethodAdd(PATH_VAL, oPositionMatrix);
+	
+	modelKreplenie1 = pAsmDoc->ComponentDefinition->Occurrences->MethodAdd(PATH_KREPLENIE, oPositionMatrix);
+	modelKreplenie2 = pAsmDoc->ComponentDefinition->Occurrences->MethodAdd(PATH_KREPLENIE, oPositionMatrix);
+
+
+	SurfaceBody *SurfBodyMufta, *SurfBodyVal1, *SurfBodyVal2, *SurfBodyKreplenie1, *SurfBodyKreplenie2;
+	SurfaceBodies *SurfBodiesMufta, *SurfBodiesVal1, *SurfBodiesVal2, *SurfBodiesKreplenie1, *SurfBodiesKreplenie2;
+	Faces* oFacesMufta, * oFacesVal1, * oFacesVal2, *oFacesKreplenie1, *oFacesKreplenie2;
+	FacePtr oFaceMufta, oFaceVal1, oFaceVal2, oFaceKreplenie1, oFaceKreplenie2;
+
+	modelMufta->get_SurfaceBodies(&SurfBodiesMufta);
+	SurfBodiesMufta->get_Item(1, &SurfBodyMufta);	
+	SurfBodyMufta->get_Faces(&oFacesMufta);
+	
+	modelVal1->get_SurfaceBodies(&SurfBodiesVal1);
+	SurfBodiesVal1->get_Item(1, &SurfBodyVal1);
+	SurfBodyVal1->get_Faces(&oFacesVal1);
+
+	modelVal2->get_SurfaceBodies(&SurfBodiesVal2);
+	SurfBodiesVal2->get_Item(1, &SurfBodyVal2);
+	SurfBodyVal2->get_Faces(&oFacesVal2);
+	
+	modelKreplenie1->get_SurfaceBodies(&SurfBodiesKreplenie1);
+	SurfBodiesKreplenie1->get_Item(1, &SurfBodyKreplenie1);
+	SurfBodyKreplenie1->get_Faces(&oFacesKreplenie1);
+	
+	modelKreplenie2->get_SurfaceBodies(&SurfBodiesKreplenie2);
+	SurfBodiesKreplenie2->get_Item(1, &SurfBodyKreplenie2);
+	SurfBodyKreplenie2->get_Faces(&oFacesKreplenie2);
+	
+	MateConstraintPtr sPlane;
+
+	//совмещаем вал1 по оси с муфтой
+	oFacesMufta->get_Item(6, &oFaceMufta);
+	oFacesVal1->get_Item(3, &oFaceVal1);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceVal1, 0, kInferredLine, kInferredLine);
+	
+	//совмещаем вал2 по оси с муфтой
+	oFacesMufta->get_Item(6, &oFaceMufta);
+	oFacesVal2->get_Item(3, &oFaceVal2);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceVal2, 0, kInferredLine, kInferredLine);
+
+	//совмещаем вал1 по оси с креплением муфты
+	oFacesMufta->get_Item(2, &oFaceMufta);
+	oFacesVal1->get_Item(1, &oFaceVal1);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceVal1, 0, kInferredLine, kInferredLine);
+
+	//совмещаем вал2 по оси с креплением муфты
+	oFacesMufta->get_Item(4, &oFaceMufta);
+	oFacesVal2->get_Item(1, &oFaceVal2);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceVal2, 0, kInferredLine, kInferredLine);
+
+	//совмещаем крепление1 по оси с муфтой
+	oFacesMufta->get_Item(2, &oFaceMufta);
+	oFacesKreplenie1->get_Item(2, &oFaceKreplenie1);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceKreplenie1, 0, kInferredLine, kInferredLine);
+	sPlane = pAsmComDef->Constraints->MethodAddTangentConstraint(oFaceMufta, oFaceKreplenie1, true, 0);
+
+	//совмещаем крепление2 по оси с муфтой
+	oFacesMufta->get_Item(4, &oFaceMufta);
+	oFacesKreplenie2->get_Item(2, &oFaceKreplenie2);
+	sPlane = pAsmComDef->Constraints->MethodAddMateConstraint(oFaceMufta, oFaceKreplenie2, 0, kInferredLine, kInferredLine);
+	sPlane = pAsmComDef->Constraints->MethodAddTangentConstraint(oFaceMufta, oFaceKreplenie2, true, 0);
+}
+
 void CProgaKursachDlg::OnBnClickedButton1()
 {
 	SelectSet* pSelect;
@@ -644,7 +730,8 @@ void CProgaKursachDlg::OnBnClickedButton1()
 	{
 		for (int c = 1; c <= pSelect->GetCount(); c++)
 		{
-			EdgePtr Seekedge = pSelect->GetItem(c);
+			FacePtr Seekface = pSelect->GetItem(c);
+			//EdgePtr Seekedge = pSelect->GetItem(c);
 
 			for (int i = 1; i <= pPartComDef->SurfaceBodies->GetCount(); i++)
 			{
@@ -655,21 +742,23 @@ void CProgaKursachDlg::OnBnClickedButton1()
 
 				SurfBodies->get_Item(i, &SurfBody);
 
+				//Edge* edge;
+				//Edges* edges;
 
-				Edge* edge;
-				Edges* edges;
+				Face* face;
+				Faces* faces;
 
-				SurfBody->get_Edges(&edges);
+				//SurfBody->get_Edges(&edges);
+				SurfBody->get_Faces(&faces);
 
-				int N = SurfBody->Edges->GetCount();
-				for (int j = 1; j <= SurfBody->Edges->GetCount(); j++)
+				for (int j = 1; j <= SurfBody->Faces->GetCount(); j++)
 				{
-					edges->get_Item(j, &edge);
+					faces->get_Item(j, &face);
 
-					if (Seekedge == edge)
+					if (Seekface == face)
 					{
 						CString str;
-						str.Format(L"Выделенное ребро имеет #%i", j);
+						str.Format(L"Выделенное Face имеет #%i", j);
 						MessageBox(str);
 						break;
 

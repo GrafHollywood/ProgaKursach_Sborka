@@ -1,9 +1,7 @@
 ﻿
 // ProgaKursachDlg.h: файл заголовка
 //
-
 #pragma once
-
 
 // Диалоговое окно CProgaKursachDlg
 class CProgaKursachDlg : public CDialogEx

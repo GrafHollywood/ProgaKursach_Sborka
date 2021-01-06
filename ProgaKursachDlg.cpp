@@ -120,7 +120,7 @@ BEGIN_MESSAGE_MAP(CProgaKursachDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_CBN_SELCHANGE(IDC_COMBO_MOMENT, &CProgaKursachDlg::OnCbnSelchangeComboMoment)
 	ON_BN_CLICKED(IDC_BUTTON_CREATE, &CProgaKursachDlg::OnBnClickedButtonCreate)
-	ON_BN_CLICKED(IDC_BUTTON1, &CProgaKursachDlg::OnBnClickedButton1)
+	//ON_BN_CLICKED(IDC_BUTTON1, &CProgaKursachDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -302,6 +302,10 @@ void CProgaKursachDlg::OnCbnSelchangeComboMoment()
 void CProgaKursachDlg::OnBnClickedButtonCreate()
 {
 	// TODO: добавьте свой код обработчика уведомлений
+	if (m_dD1 == 0 || m_dD2==0 || m_dL==0)
+	{
+		return;
+	}
 	if (!pInvApp)
 	{
 		// Get hold of the program id of Inventor.
@@ -338,6 +342,8 @@ void CProgaKursachDlg::OnBnClickedButtonCreate()
 	CreateKreplenie();
 
 	CreateSborka();
+
+	MessageBox(L"Сборка создана");
 }
 
 
